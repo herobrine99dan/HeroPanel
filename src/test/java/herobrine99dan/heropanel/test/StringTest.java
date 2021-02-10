@@ -2,6 +2,7 @@ package herobrine99dan.heropanel.test;
 
 public class StringTest {
 
+	//Remove all color codes in string
 	public static void main(String[] args) {
 		String test = "Plugins (10): §aEssentials§f, §aFreeMCServerFixes§f, §aMultiWorld§f, §aPermissionsEx§f, §aPlayerSimulator§f, §aPlugMan§f, §aProtocolSupport§f, §aServerTest§f, §aspark§f, §aViaVersion";
 		char[] array = test.toCharArray();
