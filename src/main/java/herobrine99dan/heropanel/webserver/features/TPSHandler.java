@@ -9,31 +9,33 @@ import herobrine99dan.heropanel.UniportWebServer;
 
 public class TPSHandler implements Runnable {
 	private EstimatedTPSCalculator tpsCalculator;
-	private boolean customtpsmethod;
+	private boolean customTPSMethod;
 	private int elapsedTicks = 0;
 	private ReflectionUtility reflection;
-	private float minecraftTPS, customTPS;
+	private volatile float minecraftTPS, customTPS;
 
 	public void startTask(ReflectionUtility reflection, UniportWebServer main) {
 		this.elapsedTicks = 0;
 		this.reflection = reflection;
 		this.tpsCalculator = new EstimatedTPSCalculator();
-		this.customtpsmethod = main.getHeroPanelConfig().customTPSMethod();
+		this.customTPSMethod = main.getHeroPanelConfig().customTPSMethod();
 		Bukkit.getScheduler().scheduleSyncRepeatingTask(main, this, 120L, 1);
 	}
 
 	public float getTPS() {
-		if (customtpsmethod)
+		if (customTPSMethod)
 			return customTPS;
 		return minecraftTPS;
 	}
 
 	public void run() {
-		try {
-			minecraftTPS = (float) reflection.getMinecraftServerTPS();
-		} catch (ArrayIndexOutOfBoundsException | IllegalArgumentException | IllegalAccessException e) {
-			e.printStackTrace();
-			minecraftTPS = (float) this.tpsCalculator.calculateCurrentAverageTPS();
+		if (!customTPSMethod) {
+			try {
+				minecraftTPS = (float) reflection.getMinecraftServerTPS();
+			} catch (ArrayIndexOutOfBoundsException | IllegalArgumentException | IllegalAccessException e) {
+				e.printStackTrace();
+				minecraftTPS = (float) this.tpsCalculator.calculateCurrentAverageTPS();
+			}
 		}
 		float tps = (float) this.tpsCalculator.calculateCurrentAverageTPS();
 		this.tpsCalculator.tick();

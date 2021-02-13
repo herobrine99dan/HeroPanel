@@ -27,7 +27,7 @@ public class Utility {
 	 * @throws IOException
 	 * @throws ParseException
 	 */
-	public static String startAnotherNgrokTunnel(int portNgrok, String protocolNgrok)
+	public static JSONObject startAnotherNgrokTunnel(int portNgrok, String protocolNgrok)
 			throws IOException, ParseException {
 		URL url = new URL("http://localhost:4040/api/tunnels");
 		HttpURLConnection con = (HttpURLConnection) url.openConnection();
@@ -56,6 +56,6 @@ public class Utility {
 			object.put("public_url", returned.get("public_url"));
 			object.put("proto", returned.get("proto"));
 		}
-		return object.toString();
+		return object;
 	}
 }

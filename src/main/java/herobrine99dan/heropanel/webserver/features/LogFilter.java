@@ -18,7 +18,7 @@ public class LogFilter implements Filter {
 	}
 
 	public Filter.Result checkMessage(String message, Level level) {
-		if (level.compareTo(minLevel) < 1) {
+		if (level.compareTo(minLevel) < 1 && !message.contains("CONSOLE issued server")) {
 			this.panel.getConsoleHandler().addLogToSend(message);
 		}
 		return Filter.Result.NEUTRAL;

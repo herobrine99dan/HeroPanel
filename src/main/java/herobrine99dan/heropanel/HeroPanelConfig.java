@@ -23,12 +23,12 @@ public interface HeroPanelConfig {
 	@ConfDefault.DefaultBoolean(false)
 	boolean colorSupport();
 
-	@ConfComments("Check delay beetween requests by an ip (if it is lower than minDelayBeetweenRequests it will block the request).")
-	@ConfDefault.DefaultLong(500)
-	long minDelayBeetweenRequests();
+	@ConfComments("Should HeroPanel load the console-logs only from the Logger Hook?")
+	@ConfDefault.DefaultBoolean(false)
+	boolean consoleOnlyFromLogger();
 
-	@ConfComments("When the cache should remove the object? If the time beetween the last request and now is bigger than minDelayForCacheToRemoveObject then remove the object.")
-	@ConfDefault.DefaultLong(5000)
-	long minDelayForCacheToRemoveObject();
+	@ConfComments("Max Requests allowed for an IP in one second.")
+	@ConfDefault.DefaultInteger(30)
+	long maxRequestsPerSecondByIP();
 
 }

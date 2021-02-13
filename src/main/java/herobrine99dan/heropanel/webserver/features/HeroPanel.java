@@ -7,6 +7,8 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.GeneralSecurityException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -22,23 +24,31 @@ public class HeroPanel {
 	private final AuthenticationHandler authHandler;
 	private final ConsoleHandler consoleHandler;
 	private final TPSHandler tpsHandler;
-	public static final boolean logFromFile = true;
 	private final UniportWebServer main;
+	private final boolean consoleOnlyFromLogger;
+	private static final Logger LOGGER = Logger.getLogger(HeroPanel.class.getName());
 
 	public HeroPanel(ReflectionUtility reflection, UniportWebServer main) {
 		this.main = main;
 		authHandler = new AuthenticationHandler(main.getHeroPanelConfig().TOTPKey());
 		consoleHandler = new ConsoleHandler();
-		if (logFromFile) {
-			consoleHandler.schedule(main);
-		}
+		consoleHandler.schedule(main);
+		consoleOnlyFromLogger = main.getHeroPanelConfig().consoleOnlyFromLogger();
+		LOGGER.fine("AuthenticationHanler and ConsoleHandler were loaded!");
 		tpsHandler = new TPSHandler();
 		tpsHandler.startTask(reflection, main);
+		LOGGER.fine("TPSHandler was loaded correctly!");
 	}
 
 	public void handleThePages(HTTPRequestEvent event) throws IOException, GeneralSecurityException {
-		String req = URLDecoder.decode(event.getConnection().request, StandardCharsets.UTF_8.name())
-				.replaceFirst("/panel", "");
+		String req = "/panel/";
+		try {
+			req = URLDecoder.decode(event.getConnection().request, StandardCharsets.UTF_8.name()).replaceFirst("/panel",
+					"");
+		} catch (IllegalArgumentException ex) { // Sometimes for some bad characters URLDecoder.decode() gives an error
+			LOGGER.log(Level.FINE, "There was an error while decoding url: " + event.getConnection().request, ex);
+			return;
+		}
 		String ip = event.getAddress().getAddress().getHostAddress();
 		if (event.getHost().contains("ngrok.io")) {
 			ip = event.getNgrokIp();
@@ -47,8 +57,7 @@ public class HeroPanel {
 			if (authHandler.isAuthenticated(ip)) {
 				event.setMessage("<meta http-equiv=\"refresh\" content=\"0; URL='/panel/dashboard.html'\" />\n" + "");
 			} else {
-				event.setImage(Files
-						.readAllBytes(new File(main.getDataFolder(), "heropanel-login.html").toPath()));
+				event.setImage(Files.readAllBytes(new File(main.getDataFolder(), "heropanel-login.html").toPath()));
 			}
 		}
 		String argument = "";
@@ -78,8 +87,7 @@ public class HeroPanel {
 			return;
 		}
 		if (req.equals("/dashboard.html") && authHandler.isAuthenticated(ip)) {
-			event.setImage(Files
-					.readAllBytes(new File(main.getDataFolder(), "heropanel-dashboard.html").toPath()));
+			event.setImage(Files.readAllBytes(new File(main.getDataFolder(), "heropanel-dashboard.html").toPath()));
 			return;
 		} else if (req.startsWith("/dashboard.html") && !authHandler.isAuthenticated(ip)) {
 			event.setMessage("<meta http-equiv=\"refresh\" content=\"0; URL='/panel/'\" />\n" + "");
@@ -108,10 +116,11 @@ public class HeroPanel {
 			return;
 		}
 		if (req.equals("/server/fullconsolelog") && authHandler.isAuthenticated(ip)) {
-			if (logFromFile) {
+			if (!consoleOnlyFromLogger) {
 				event.setMessage(this.getConsoleHandler().getFullLogToSendInJSONForm());
 			} else {
-				event.setMessage("{}");
+				event.setMessage("{line1:'Console loaded! You will see all messages from now.'}"); // Sending empty JSON
+																									// string
 			}
 			return;
 		}
@@ -123,7 +132,7 @@ public class HeroPanel {
 		String json = dashboardjson;
 		long RAM_USED = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
 		long cpu = Math
-				.round(ManagementFactory.getPlatformMXBean(OperatingSystemMXBean.class).getSystemCpuLoad() * 100);
+				.round(ManagementFactory.getPlatformMXBean(OperatingSystemMXBean.class).getProcessCpuLoad() * 100);
 		float tps = this.tpsHandler.getTPS();
 		String ip = "127.0.0.1";
 		return json.replace("#numplayers", Bukkit.getOnlinePlayers().size() + "")

@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -28,9 +29,10 @@ public class ConsoleHandler {
 			public void run() {
 				fullLog.clear();
 				try {
-					for (String s : tailFile(new File("./logs/latest.log").toPath(), 80)) {
+					List<String> tailedFile = tailFile(new File("./logs/latest.log").toPath(), 80);
+					for (int i = tailedFile.size()-1; i > 0; i--) {
 						if (!colorSupport) {
-							fullLog.add(removeColorCodes(s));
+							fullLog.add(removeColorCodes(tailedFile.get(i)));
 						}
 					}
 				} catch (IOException e) {
@@ -59,7 +61,7 @@ public class ConsoleHandler {
 	public String getFullLogToSendInJSONForm() {
 		JSONObject person = new JSONObject();
 		List<String> cloned = new ArrayList<String>(fullLog);
-		Collections.reverse(cloned);
+		//Collections.reverse(cloned);
 		for (int i = 0; i < cloned.size(); i++) {
 			person.put("line" + i, cloned.get(i));
 		}

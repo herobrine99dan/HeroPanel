@@ -36,9 +36,9 @@ public class UniportWebServer extends JavaPlugin implements Listener {
 	}
 
 	public void onEnable() {
+		setupConfiguration();
 		CustomHTTPServer listener = new CustomHTTPServer(reflection, this);
 		this.getServer().getPluginManager().registerEvents(listener, this);
-		setupConfiguration();
 		listener.cleanConnectionsCache();
 	}
 

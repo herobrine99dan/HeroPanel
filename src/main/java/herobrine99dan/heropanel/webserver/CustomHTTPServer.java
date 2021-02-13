@@ -22,72 +22,71 @@ import herobrine99dan.heropanel.webserver.features.HeroPanel;
 import herobrine99dan.heropanel.webserver.features.LogFilter;
 
 public class CustomHTTPServer implements Listener {
-	
-	private ConcurrentHashMap<String, Long> connections = new ConcurrentHashMap<String, Long>();
+
+	private ConcurrentHashMap<String, Integer> connections = new ConcurrentHashMap<String, Integer>();
 	private HeroPanel panel;
-	private final boolean ngrokCompatibility; //TODO Use ngrokCompatibility and lunch a tunnel with ngrok that 
+	private final boolean ngrokCompatibility; // TODO Use ngrokCompatibility and lunch a tunnel with ngrok that
 	private String httpTunnel = "";
-	private final long minDelayBeetweenRequests;
-	private final long minDelayForCacheToRemoveObject;
+	private final long maxRequestsPerSecondByIP;
 	private final UniportWebServer main;
-	
+
 	public CustomHTTPServer(ReflectionUtility reflection, UniportWebServer main) {
 		this.main = main;
 		this.panel = new HeroPanel(reflection, main);
 		ngrokCompatibility = main.getHeroPanelConfig().ngrokCompatibility();
-		minDelayForCacheToRemoveObject = main.getHeroPanelConfig().minDelayForCacheToRemoveObject();
-		minDelayBeetweenRequests = main.getHeroPanelConfig().minDelayBeetweenRequests();
+		maxRequestsPerSecondByIP = main.getHeroPanelConfig().maxRequestsPerSecondByIP();
 		((Logger) LogManager.getRootLogger()).addFilter(new LogFilter(panel));
 	}
-	
+
 	public void cleanConnectionsCache() {
 		new BukkitRunnable() {
 			@Override
 			public void run() {
-				for(String key : connections.keySet()) {
-					final long current = (long) (System.nanoTime() / 1e+6);
-					long result = current - connections.get(key);
-					if(result > minDelayForCacheToRemoveObject) {
-						connections.remove(key);
-					}
+				for (String key : connections.keySet()) {
+					connections.remove(key);
 				}
 			}
-		}.runTaskTimerAsynchronously(main, 199, 1);
+		}.runTaskTimerAsynchronously(main, 19, 1);
 	}
-	
+
 	public boolean isConnectionComingFromCorrectSource(HTTPRequestEvent event) {
-		if(ngrokCompatibility) { 
-			//If the server should use Ngrok Tunnels, check if they are actually doing this. 
-			//Even if this isn't a secure method because connection can actually spoof Ngrok 
-			//Ip and Host (using HTTP Properties on connection), the only one able to 
-			//exploit this is the one who knows the ngrok url.Since it is randomly generated
-			//every time you restart the server, if you don't give the url no one will be 
-			//able to exploit this because they don't know what url to connect to.
+		if (ngrokCompatibility) {
+			// If the server should use Ngrok Tunnels, check if they are actually doing
+			// this.
+			// Even if this isn't a secure method because connection can actually spoof
+			// Ngrok
+			// Ip and Host (using HTTP Properties on connection), the only one able to
+			// exploit this is the one who knows the ngrok url.Since it is randomly
+			// generated
+			// every time you restart the server, if you don't give the url no one will be
+			// able to exploit this because they don't know what url to connect to.
 			return !event.getNgrokIp().isEmpty() && event.getHost().equals(httpTunnel);
 		}
-		//If the server doesn't use Ngrok Tunnels, then it will use the router's connection.
-		//In this case, the IP of the connection can't be spoofed, since the connection is
-		//received and handled directly by the router and the server.
-		return true; 
+		// If the server doesn't use Ngrok Tunnels, then it will use the router's
+		// connection.
+		// In this case, the IP of the connection can't be spoofed, since the connection
+		// is
+		// received and handled directly by the router and the server.
+		return true;
 	}
 
 	@EventHandler
 	public void onConnection(HTTPRequestEvent event) throws IOException, GeneralSecurityException {
-		//Check if the connection comes from the correct source (it is very very very very hard 
-		//to spoof if the owner doesn't give the http url, else it becomes 
+		// Check if the connection comes from the correct source (it is very very very
+		// very hard
+		// to spoof if the owner doesn't give the http url, else it becomes
 		if (!isConnectionComingFromCorrectSource(event)) {
 			event.setMessage(
 					"Sorry, we aren't able to get your ip through the ngrok api. Please start the ngrok http tunnel and then the tcp tunnel! (Host: "
 							+ event.getHost() + ")");
 			return;
 		}
-		//Handle BruteForce Attacks
+		// Handle BruteForce Attacks
 		String ipAddress = ngrokCompatibility ? event.getNgrokIp() : event.getAddress().getAddress().getHostAddress();
-		final long current = (long) (System.nanoTime() / 1e+6);
-		Long lastDelay = connections.put(ipAddress, current);
-		if(lastDelay != null) {
-			long result = current - lastDelay;
-			if(result < minDelayBeetweenRequests) {
+		Integer maxConnections = connections.getOrDefault(ipAddress, 0);
+		connections.put(ipAddress, maxConnections + 1);
+		if (maxConnections != null) {
+			if (maxConnections + 1 > maxRequestsPerSecondByIP) {
 				event.setHttpcode(HTTPResponseCode.Code429);
 				return;
 			}

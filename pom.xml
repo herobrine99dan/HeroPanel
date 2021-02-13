@@ -39,8 +39,6 @@
 							<artifactSet>
 								<includes>
 									<include>space.arim.dazzleconf:*</include>
-								</includes>
-								<includes>
 									<include>com.googlecode.json-simple:json-simple</include>
 								</includes>
 							</artifactSet>
