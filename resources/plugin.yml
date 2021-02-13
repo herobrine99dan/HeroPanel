@@ -1,6 +1,0 @@
-name: HeroPanel
-main: herobrine99dan.heropanel.UniportWebServer
-version: 1.0
-author: herobrine99dan
-#We do this to remove some issues
-softdepend: [ProtocolSupport, ViaVersion, ProtocolLib]

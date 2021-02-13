@@ -40,10 +40,17 @@
 								<includes>
 									<include>space.arim.dazzleconf:*</include>
 								</includes>
+								<includes>
+									<include>com.googlecode.json-simple:json-simple</include>
+								</includes>
 							</artifactSet>
 							<relocations>
 								<relocation>
 									<pattern>space.arim.dazzleconf</pattern>
+									<shadedPattern>herobrine99dan.heropanel.shaded</shadedPattern>
+								</relocation>
+								<relocation>
+									<pattern>org.json.simple</pattern>
 									<shadedPattern>herobrine99dan.heropanel.shaded</shadedPattern>
 								</relocation>
 							</relocations>
@@ -96,6 +103,13 @@
 			<version>4.0.23.Final</version>
 			<scope>provided</scope>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.googlecode.json-simple/json-simple -->
+		<dependency>
+			<groupId>com.googlecode.json-simple</groupId>
+			<artifactId>json-simple</artifactId>
+			<version>1.1.1</version>
+		</dependency>
+
 	</dependencies>
 	<repositories>
 		<repository>
