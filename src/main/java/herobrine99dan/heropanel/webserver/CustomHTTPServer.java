@@ -8,6 +8,8 @@ import java.nio.file.Files;
 import java.security.GeneralSecurityException;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.management.MalformedObjectNameException;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.Logger;
 import org.bukkit.event.EventHandler;
@@ -24,9 +26,9 @@ import herobrine99dan.heropanel.webserver.features.LogFilter;
 public class CustomHTTPServer implements Listener {
 
 	private ConcurrentHashMap<String, Integer> connections = new ConcurrentHashMap<String, Integer>();
-	private HeroPanel panel;
+	private final HeroPanel panel;
 	private final boolean ngrokCompatibility; // TODO Use ngrokCompatibility and lunch a tunnel with ngrok that
-	private String httpTunnel = "";
+	private final String httpTunnel = "";
 	private final long maxRequestsPerSecondByIP;
 	private final UniportWebServer main;
 
@@ -135,6 +137,10 @@ public class CustomHTTPServer implements Listener {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	public HeroPanel getHeroPanel() {
+		return panel;
 	}
 
 }

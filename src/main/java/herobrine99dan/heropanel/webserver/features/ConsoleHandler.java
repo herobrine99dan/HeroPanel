@@ -1,46 +1,14 @@
 package herobrine99dan.heropanel.webserver.features;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
-import org.bukkit.scheduler.BukkitRunnable;
 import org.json.simple.JSONObject;
 
-import herobrine99dan.heropanel.UniportWebServer;
-
 public class ConsoleHandler {
-
 	private final List<String> logsToSend = Collections.synchronizedList(new ArrayList<String>());
 	private final List<String> fullLog = Collections.synchronizedList(new ArrayList<String>());
-	private final static boolean colorSupport = false;
-
-	public void schedule(UniportWebServer main) {
-		new BukkitRunnable() {
-			@Override
-			public void run() {
-				fullLog.clear();
-				try {
-					List<String> tailedFile = tailFile(new File("./logs/latest.log").toPath(), 80);
-					for (int i = tailedFile.size()-1; i > 0; i--) {
-						if (!colorSupport) {
-							fullLog.add(removeColorCodes(tailedFile.get(i)));
-						}
-					}
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}.runTaskTimerAsynchronously(main, 199, 1);
-	}
 
 	public String removeColorCodes(String test) {
 		char[] array = test.toCharArray();
@@ -61,14 +29,15 @@ public class ConsoleHandler {
 	public String getFullLogToSendInJSONForm() {
 		JSONObject person = new JSONObject();
 		List<String> cloned = new ArrayList<String>(fullLog);
-		//Collections.reverse(cloned);
 		for (int i = 0; i < cloned.size(); i++) {
-			person.put("line" + i, cloned.get(i));
+			String s = cloned.get(i);
+			person.put("line" + i, s);
 		}
 		return person.toString();
 	}
 
 	public void addLogToSend(String s) {
+		fullLog.add(removeColorCodes(s));
 		logsToSend.add(removeColorCodes(s));
 	}
 
@@ -80,38 +49,4 @@ public class ConsoleHandler {
 		logsToSend.clear();
 		return person.toString();
 	}
-
-	final List<String> tailFile(final Path source, final int noOfLines) throws IOException {
-		FileBuffer fileBuffer = new FileBuffer(noOfLines);
-		try (BufferedReader br = new BufferedReader(new FileReader(source.toFile()))) {
-			String st;
-			while ((st = br.readLine()) != null) {
-				if (!st.contains("/DEBUG")) {
-					fileBuffer.collect(st);
-				}
-			}
-		}
-		return fileBuffer.getLines();
-	}
-
-	private final class FileBuffer {
-		private int offset = 0;
-		private final int noOfLines;
-		private final String[] lines;
-
-		public FileBuffer(int noOfLines) {
-			this.noOfLines = noOfLines;
-			this.lines = new String[noOfLines];
-		}
-
-		public void collect(String line) {
-			lines[offset++ % noOfLines] = line;
-		}
-
-		public List<String> getLines() {
-			return IntStream.range(offset < noOfLines ? 0 : offset - noOfLines, offset)
-					.mapToObj(idx -> lines[idx % noOfLines]).collect(Collectors.toList());
-		}
-	}
-
 }

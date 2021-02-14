@@ -10,6 +10,10 @@ import java.security.GeneralSecurityException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.management.JMException;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+
 import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -25,19 +29,24 @@ public class HeroPanel {
 	private final ConsoleHandler consoleHandler;
 	private final TPSHandler tpsHandler;
 	private final UniportWebServer main;
-	private final boolean consoleOnlyFromLogger;
+	private final ReflectionUtility reflection;
 	private static final Logger LOGGER = Logger.getLogger(HeroPanel.class.getName());
+	private final ResourcesHandler resourcesHandler;
 
 	public HeroPanel(ReflectionUtility reflection, UniportWebServer main) {
 		this.main = main;
 		authHandler = new AuthenticationHandler(main.getHeroPanelConfig().TOTPKey());
 		consoleHandler = new ConsoleHandler();
-		consoleHandler.schedule(main);
-		consoleOnlyFromLogger = main.getHeroPanelConfig().consoleOnlyFromLogger();
 		LOGGER.fine("AuthenticationHanler and ConsoleHandler were loaded!");
 		tpsHandler = new TPSHandler();
-		tpsHandler.startTask(reflection, main);
-		LOGGER.fine("TPSHandler was loaded correctly!");
+		LOGGER.fine("TPSHandler was constructed correctly!");
+		this.reflection = reflection;
+		this.resourcesHandler = new ResourcesHandler(this);
+	}
+
+	public void setupEverything() {
+		tpsHandler.startTask(this.reflection, main);
+		resourcesHandler.setup();
 	}
 
 	public void handleThePages(HTTPRequestEvent event) throws IOException, GeneralSecurityException {
@@ -116,12 +125,7 @@ public class HeroPanel {
 			return;
 		}
 		if (req.equals("/server/fullconsolelog") && authHandler.isAuthenticated(ip)) {
-			if (!consoleOnlyFromLogger) {
-				event.setMessage(this.getConsoleHandler().getFullLogToSendInJSONForm());
-			} else {
-				event.setMessage("{line1:'Console loaded! You will see all messages from now.'}"); // Sending empty JSON
-																									// string
-			}
+			event.setMessage(this.getConsoleHandler().getFullLogToSendInJSONForm());
 			return;
 		}
 	}
@@ -131,8 +135,7 @@ public class HeroPanel {
 	public String getDashBoardApi() {
 		String json = dashboardjson;
 		long RAM_USED = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-		long cpu = Math
-				.round(ManagementFactory.getPlatformMXBean(OperatingSystemMXBean.class).getProcessCpuLoad() * 100);
+		long cpu = Math.round(this.resourcesHandler.getCPUUsageMethod().getCpuUsage() * 100);
 		float tps = this.tpsHandler.getTPS();
 		String ip = "127.0.0.1";
 		return json.replace("#numplayers", Bukkit.getOnlinePlayers().size() + "")

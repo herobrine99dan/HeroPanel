@@ -6,6 +6,8 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map.Entry;
 
+import javax.management.MalformedObjectNameException;
+
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -23,6 +25,7 @@ public class UniportWebServer extends JavaPlugin implements Listener {
 
 	private HeroPanelConfig config;
 	private ReflectionUtility reflection;
+	private CustomHTTPServer listener;
 
 	public void onLoad() {
 		this.reflection = new ReflectionUtility();
@@ -33,13 +36,14 @@ public class UniportWebServer extends JavaPlugin implements Listener {
 				| SecurityException | NoSuchFieldException e) {
 			e.printStackTrace();
 		}
+		setupConfiguration();
+		this.listener = new CustomHTTPServer(reflection, this);
 	}
 
 	public void onEnable() {
-		setupConfiguration();
-		CustomHTTPServer listener = new CustomHTTPServer(reflection, this);
 		this.getServer().getPluginManager().registerEvents(listener, this);
 		listener.cleanConnectionsCache();
+		listener.getHeroPanel().setupEverything();
 	}
 
 	void setupConfiguration() {

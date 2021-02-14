@@ -23,12 +23,8 @@ public interface HeroPanelConfig {
 	@ConfDefault.DefaultBoolean(false)
 	boolean colorSupport();
 
-	@ConfComments("Should HeroPanel load the console-logs only from the Logger Hook?")
-	@ConfDefault.DefaultBoolean(false)
-	boolean consoleOnlyFromLogger();
-
 	@ConfComments("Max Requests allowed for an IP in one second.")
-	@ConfDefault.DefaultInteger(30)
+	@ConfDefault.DefaultInteger(20)
 	long maxRequestsPerSecondByIP();
 
 }
