@@ -42,6 +42,9 @@ public class AuthenticationHandler {
 		if(code.isEmpty()) {
 			return false;
 		}
+		if(base32Secret.isEmpty()) {
+			return false;
+		}
 		String secret = Long.toString(TOTP.generateCurrentNumber(base32Secret));
 		if(secret.equals(code) && !lastCodeUsed.get().equals(secret)) {
 			authenticated.set(ip);

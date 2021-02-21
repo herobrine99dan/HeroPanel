@@ -35,7 +35,7 @@ public class UniportWebServer extends JavaPlugin implements Listener {
 				| IllegalAccessException | NoSuchFieldException e1) {
 			e1.printStackTrace();
 		}
-		setupConfiguration();
+		setupConfigurationOrReload();
 		if (config.portToUse() == -1) {
 			try {
 				injectAndFixIssues(reflection);
@@ -64,7 +64,7 @@ public class UniportWebServer extends JavaPlugin implements Listener {
 		listener.getHeroPanel().setupEverything();
 	}
 
-	void setupConfiguration() {
+	public void setupConfigurationOrReload() {
 		HeroPanelConfig config;
 		try {
 			config = new ConfigurationHelper<>(this.getDataFolder().toPath(), "config.yml",

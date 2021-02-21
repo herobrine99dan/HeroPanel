@@ -18,7 +18,7 @@ import herobrine99dan.heropanel.protocol.HTTPRequestEvent;
 
 public class HeroPanel {
 
-	private final AuthenticationHandler authHandler;
+	private AuthenticationHandler authHandler;
 	private final ConsoleHandler consoleHandler;
 	private final TPSHandler tpsHandler;
 	private final UniportWebServer main;
@@ -86,6 +86,11 @@ public class HeroPanel {
 			event.setMessage("<meta http-equiv=\"refresh\" content=\"0; URL='/panel/'\" />\n" + "");
 			return;
 		}
+		if (argument.equals("logout") && authHandler.isAuthenticated(ip)) {
+			authHandler.logoutHandler();
+			event.setMessage("<meta http-equiv=\"refresh\" content=\"0; URL='/panel/'\" />\n" + "");
+			return;
+		}
 		if (req.equals("/dashboard.html") && authHandler.isAuthenticated(ip)) {
 			event.setImage(Files.readAllBytes(new File(main.getDataFolder(), "heropanel-dashboard.html").toPath()));
 			return;
@@ -96,6 +101,21 @@ public class HeroPanel {
 		if (req.equals("/server") && authHandler.isAuthenticated(ip)) {
 			event.setMessage(this.getDashBoardApi());
 			return;
+		}
+		if (req.equals("/setup") && !authHandler.isAuthenticated(ip)) {
+			if (main.getHeroPanelConfig().TOTPKey().isEmpty()) {
+				String key = TOTP.generateBase32Secret();
+				main.getConfig().set("TOTPKey", key);
+				main.saveConfig();
+				String qrCode = TOTP.qrImageUrl("HeroPanel", key);
+				event.setMessage(("<html>\n" + "  <body>\n" + "    <h1>HeroPanel Setup</h1>\n"
+						+ "    <h3>Hello, to setup correctly the HeroPanel please download a 2FA Authenticator, i suggest to use Google Authenticator.</h3>\n"
+						+ "    <h3>Then scan this qrcode and here you are!</h3>\n" + "    <img src=\"qrcodelink\">\n"
+						+ "  </body>\n" + "</html>").replace("qrcodelink", qrCode));
+				main.setupConfigurationOrReload();
+				authHandler = new AuthenticationHandler(main.getHeroPanelConfig().TOTPKey());
+				return;
+			}
 		}
 		if (req.equals("/server/command") && authHandler.isAuthenticated(ip)) {
 			final String argumentFinal = argument;
