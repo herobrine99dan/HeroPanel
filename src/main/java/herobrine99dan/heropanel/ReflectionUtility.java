@@ -1,6 +1,5 @@
 package herobrine99dan.heropanel;
 
-import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 
 import org.apache.commons.lang.reflect.FieldUtils;
@@ -10,7 +9,6 @@ public class ReflectionUtility {
 
 	private Class<?> serverConnectionClass;
 	private Class<?> minecraftServerClass;
-	private Field recentTPS;
 	private Object minecraftServerObject;
 	private String version;
 
@@ -20,8 +18,6 @@ public class ReflectionUtility {
 		this.serverConnectionClass = this.getNmsClass("ServerConnection");
 		this.minecraftServerClass = this.getNmsClass("MinecraftServer");
 		this.minecraftServerObject = this.getMinecraftServerObject();
-		this.recentTPS = this.minecraftServerClass.getDeclaredField("recentTps");
-		this.recentTPS.setAccessible(true);
 	}
 
 	private Object getMinecraftServerObject() throws IllegalArgumentException, IllegalAccessException {
@@ -32,12 +28,6 @@ public class ReflectionUtility {
 			}
 		}
 		return null;
-	}
-
-	public double getMinecraftServerTPS()
-			throws ArrayIndexOutOfBoundsException, IllegalArgumentException, IllegalAccessException {
-		Double tps = (Double) Array.get(this.recentTPS.get(minecraftServerObject), 0);
-		return tps;
 	}
 
 	public Class<?> getServerConnectionClass() {

@@ -6,13 +6,11 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map.Entry;
 
-import javax.management.MalformedObjectNameException;
-
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import herobrine99dan.heropanel.protocol.HTTPServerChannelHandler;
-import herobrine99dan.heropanel.webserver.CustomHTTPServer;
+import herobrine99dan.heropanel.webserver.HTTPServerListener;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandler;
@@ -25,19 +23,39 @@ public class UniportWebServer extends JavaPlugin implements Listener {
 
 	private HeroPanelConfig config;
 	private ReflectionUtility reflection;
-	private CustomHTTPServer listener;
+	private HTTPServerListener listener;
+	private CustomHTTPServer httpServer;
+	private boolean isUsingCustomHttpserver = false;
 
 	public void onLoad() {
 		this.reflection = new ReflectionUtility();
 		try {
 			reflection.updateFields();
-			inject(reflection);
-		} catch (IllegalArgumentException | IllegalAccessException | ClassNotFoundException | NoSuchMethodException
-				| SecurityException | NoSuchFieldException e) {
-			e.printStackTrace();
+		} catch (ClassNotFoundException | NoSuchMethodException | SecurityException | IllegalArgumentException
+				| IllegalAccessException | NoSuchFieldException e1) {
+			e1.printStackTrace();
 		}
 		setupConfiguration();
-		this.listener = new CustomHTTPServer(reflection, this);
+		if (config.portToUse() == -1) {
+			try {
+				injectAndFixIssues(reflection);
+			} catch (IllegalArgumentException | IllegalAccessException | SecurityException e) {
+				e.printStackTrace();
+			}
+		} else {
+			try {
+				loadHTTPServer(config.portToUse());
+				isUsingCustomHttpserver = true;
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		this.listener = new HTTPServerListener(this);
+	}
+
+	public void loadHTTPServer(int port) throws IOException {
+		httpServer = new CustomHTTPServer(port);
+		httpServer.start();
 	}
 
 	public void onEnable() {
@@ -63,7 +81,7 @@ public class UniportWebServer extends JavaPlugin implements Listener {
 	}
 
 	@SuppressWarnings("unchecked")
-	public void inject(ReflectionUtility utils) throws IllegalArgumentException, IllegalAccessException {
+	public void injectAndFixIssues(ReflectionUtility utils) throws IllegalArgumentException, IllegalAccessException {
 		Object serverConnection = utils.getServerConnection();
 		try {
 			Field g = utils.getServerConnectionClass().getDeclaredField("g");
@@ -84,7 +102,41 @@ public class UniportWebServer extends JavaPlugin implements Listener {
 		}
 	}
 
+	public void detectAndRemoveOldChannelHandler(ReflectionUtility utils)
+			throws IllegalArgumentException, IllegalAccessException {
+		Object serverConnection = utils.getServerConnection();
+		try {
+			Field g = utils.getServerConnectionClass().getDeclaredField("g");
+			g.setAccessible(true);
+			List<ChannelFuture> oldList = (List<ChannelFuture>) g.get(serverConnection);
+			for (ChannelFuture f : oldList) {
+				final Channel channel = f.channel();
+				for (Entry<String, ChannelHandler> pipeline : channel.pipeline()) {
+					if (pipeline.getKey().equals("UniportWebServerHandler")) {
+						this.getLogger().info("UniportWebServer detected a reload!");
+						channel.pipeline().remove(pipeline.getKey());
+					}
+				}
+			}
+		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public void onDisable() {
+		try {
+			detectAndRemoveOldChannelHandler(reflection);
+		} catch (IllegalArgumentException | IllegalAccessException e) {
+			e.printStackTrace();
+		}
+		if (isUsingCustomHttpserver) {
+			try {
+				this.httpServer.closeServer();
+				
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public HeroPanelConfig getHeroPanelConfig() {

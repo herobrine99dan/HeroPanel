@@ -4,39 +4,25 @@ import java.util.Arrays;
 
 import org.bukkit.Bukkit;
 
-import herobrine99dan.heropanel.ReflectionUtility;
 import herobrine99dan.heropanel.UniportWebServer;
 
 public class TPSHandler implements Runnable {
 	private EstimatedTPSCalculator tpsCalculator;
-	private boolean customTPSMethod;
 	private int elapsedTicks = 0;
-	private ReflectionUtility reflection;
 	private volatile float minecraftTPS, customTPS;
 
-	public void startTask(ReflectionUtility reflection, UniportWebServer main) {
+	public void startTask(UniportWebServer main) {
 		this.elapsedTicks = 0;
-		this.reflection = reflection;
 		this.tpsCalculator = new EstimatedTPSCalculator();
-		this.customTPSMethod = main.getHeroPanelConfig().customTPSMethod();
 		Bukkit.getScheduler().scheduleSyncRepeatingTask(main, this, 120L, 1);
 	}
 
 	public float getTPS() {
-		if (customTPSMethod)
-			return customTPS;
 		return minecraftTPS;
 	}
 
 	public void run() {
-		if (!customTPSMethod) {
-			try {
-				minecraftTPS = (float) reflection.getMinecraftServerTPS();
-			} catch (ArrayIndexOutOfBoundsException | IllegalArgumentException | IllegalAccessException e) {
-				e.printStackTrace();
-				minecraftTPS = (float) this.tpsCalculator.calculateCurrentAverageTPS();
-			}
-		}
+		minecraftTPS = (float) this.tpsCalculator.calculateCurrentAverageTPS();
 		float tps = (float) this.tpsCalculator.calculateCurrentAverageTPS();
 		this.tpsCalculator.tick();
 		if (tps > 0.0D && tps <= 21.0D) {

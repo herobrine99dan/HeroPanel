@@ -8,8 +8,6 @@ import java.nio.file.Files;
 import java.security.GeneralSecurityException;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.management.MalformedObjectNameException;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.Logger;
 import org.bukkit.event.EventHandler;
@@ -23,7 +21,7 @@ import herobrine99dan.heropanel.protocol.HTTPResponseCode;
 import herobrine99dan.heropanel.webserver.features.HeroPanel;
 import herobrine99dan.heropanel.webserver.features.LogFilter;
 
-public class CustomHTTPServer implements Listener {
+public class HTTPServerListener implements Listener {
 
 	private ConcurrentHashMap<String, Integer> connections = new ConcurrentHashMap<String, Integer>();
 	private final HeroPanel panel;
@@ -32,9 +30,9 @@ public class CustomHTTPServer implements Listener {
 	private final long maxRequestsPerSecondByIP;
 	private final UniportWebServer main;
 
-	public CustomHTTPServer(ReflectionUtility reflection, UniportWebServer main) {
+	public HTTPServerListener(UniportWebServer main) {
 		this.main = main;
-		this.panel = new HeroPanel(reflection, main);
+		this.panel = new HeroPanel(main);
 		ngrokCompatibility = main.getHeroPanelConfig().ngrokCompatibility();
 		maxRequestsPerSecondByIP = main.getHeroPanelConfig().maxRequestsPerSecondByIP();
 		((Logger) LogManager.getRootLogger()).addFilter(new LogFilter(panel));
@@ -84,7 +82,7 @@ public class CustomHTTPServer implements Listener {
 			return;
 		}
 		// Handle BruteForce Attacks
-		String ipAddress = ngrokCompatibility ? event.getNgrokIp() : event.getAddress().getAddress().getHostAddress();
+		String ipAddress = ngrokCompatibility ? event.getNgrokIp() : event.getAddress();
 		Integer maxConnections = connections.getOrDefault(ipAddress, 0);
 		connections.put(ipAddress, maxConnections + 1);
 		if (maxConnections != null) {

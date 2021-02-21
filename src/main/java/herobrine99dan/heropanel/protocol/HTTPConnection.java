@@ -2,8 +2,7 @@ package herobrine99dan.heropanel.protocol;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-
-import io.netty.buffer.ByteBufInputStream;
+import java.io.InputStream;
 
 public class HTTPConnection {
 
@@ -15,7 +14,7 @@ public class HTTPConnection {
 
 	public byte[] postData;
 
-	public void parse(ByteBufInputStream stream, BufferedReader buffer) throws IOException {
+	public void parse(InputStream stream, BufferedReader buffer) throws IOException {
 		String line;
 		int postDataI = -1;
 		while ((line = buffer.readLine()) != null) {

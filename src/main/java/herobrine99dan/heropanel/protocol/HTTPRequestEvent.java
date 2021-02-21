@@ -1,6 +1,8 @@
 package herobrine99dan.heropanel.protocol;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -22,20 +24,26 @@ public class HTTPRequestEvent extends Event {
 
 	private HTTPResponseCode httpcode;
 
-	private InetSocketAddress ip;
-
-	private ChannelHandlerContext chx;
+	private InetSocketAddress ipCTXAddress;
+	private InetAddress ipSocketAddress;
+	private boolean isUsingDefaultJavaSockets = false;
 
 	public byte[] byteArr;
 
 	public HTTPRequestEvent(HTTPConnection request, ChannelHandlerContext ctx) {
 		this.connection = request;
-		this.chx = ctx;
 		this.httpcode = HTTPResponseCode.Code200;
 		if(!(ctx.channel().remoteAddress() instanceof InetSocketAddress)) {
 			throw new RuntimeException("remoteAddress() didn't give a 'InetSocketAddress' object");
 		}
-		this.ip = (InetSocketAddress) ctx.channel().remoteAddress();
+		this.ipCTXAddress = (InetSocketAddress) ctx.channel().remoteAddress();
+	}
+	
+	public HTTPRequestEvent(HTTPConnection request, Socket socket) {
+		this.connection = request;
+		this.httpcode = HTTPResponseCode.Code200;
+		this.ipSocketAddress = socket.getInetAddress();
+		isUsingDefaultJavaSockets = true;
 	}
 
 	public HTTPResponseCode getHttpcode() {
@@ -54,12 +62,11 @@ public class HTTPRequestEvent extends Event {
 		return this.bytes;
 	}
 
-	public ChannelHandlerContext getChannelHandlerContext() {
-		return this.chx;
-	}
-
-	public InetSocketAddress getAddress() {
-		return this.ip;
+	public String getAddress() {
+		if(!isUsingDefaultJavaSockets) {
+			return ipCTXAddress.getAddress().getHostAddress();
+		}
+		return this.ipSocketAddress.getHostAddress();
 	}
 
 	public HandlerList getHandlers() {

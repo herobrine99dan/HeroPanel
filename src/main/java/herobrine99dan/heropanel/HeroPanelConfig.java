@@ -15,13 +15,13 @@ public interface HeroPanelConfig {
 	@ConfDefault.DefaultBoolean(false)
 	boolean ngrokCompatibility();
 
-	@ConfComments("Should HeroPanel use the custom TPS Method? (Put true if the minecraft one has issues)")
-	@ConfDefault.DefaultBoolean(false)
-	boolean customTPSMethod();
-
 	@ConfComments("Should HeroPanel enable color code support in console? (WARNING: this feauture isn't implemented, if you enable this you will get messages with § character)")
 	@ConfDefault.DefaultBoolean(false)
 	boolean colorSupport();
+	
+	@ConfComments("What port should HeroPanel use? (use -1 to install the panel of the minecraft port)")
+	@ConfDefault.DefaultInteger(-1)
+	int portToUse();
 
 	@ConfComments("Max Requests allowed for an IP in one second.")
 	@ConfDefault.DefaultInteger(20)

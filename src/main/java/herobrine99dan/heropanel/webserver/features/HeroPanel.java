@@ -10,16 +10,9 @@ import java.security.GeneralSecurityException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.management.JMException;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-
 import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import com.sun.management.OperatingSystemMXBean;
-
-import herobrine99dan.heropanel.ReflectionUtility;
 import herobrine99dan.heropanel.UniportWebServer;
 import herobrine99dan.heropanel.protocol.HTTPRequestEvent;
 
@@ -29,23 +22,21 @@ public class HeroPanel {
 	private final ConsoleHandler consoleHandler;
 	private final TPSHandler tpsHandler;
 	private final UniportWebServer main;
-	private final ReflectionUtility reflection;
 	private static final Logger LOGGER = Logger.getLogger(HeroPanel.class.getName());
 	private final ResourcesHandler resourcesHandler;
 
-	public HeroPanel(ReflectionUtility reflection, UniportWebServer main) {
+	public HeroPanel(UniportWebServer main) {
 		this.main = main;
 		authHandler = new AuthenticationHandler(main.getHeroPanelConfig().TOTPKey());
 		consoleHandler = new ConsoleHandler();
 		LOGGER.fine("AuthenticationHanler and ConsoleHandler were loaded!");
 		tpsHandler = new TPSHandler();
 		LOGGER.fine("TPSHandler was constructed correctly!");
-		this.reflection = reflection;
 		this.resourcesHandler = new ResourcesHandler(this);
 	}
 
 	public void setupEverything() {
-		tpsHandler.startTask(this.reflection, main);
+		tpsHandler.startTask(main);
 		resourcesHandler.setup();
 	}
 
@@ -58,7 +49,7 @@ public class HeroPanel {
 			LOGGER.log(Level.FINE, "There was an error while decoding url: " + event.getConnection().request, ex);
 			return;
 		}
-		String ip = event.getAddress().getAddress().getHostAddress();
+		String ip = event.getAddress();
 		if (event.getHost().contains("ngrok.io")) {
 			ip = event.getNgrokIp();
 		}
@@ -135,7 +126,9 @@ public class HeroPanel {
 	public String getDashBoardApi() {
 		String json = dashboardjson;
 		long RAM_USED = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-		long cpu = Math.round(this.resourcesHandler.getCPUUsageMethod().getCpuUsage() * 100);
+		long cpu = Math.round(
+				ManagementFactory.getPlatformMXBean(com.sun.management.OperatingSystemMXBean.class).getProcessCpuLoad()
+						* 100);
 		float tps = this.tpsHandler.getTPS();
 		String ip = "127.0.0.1";
 		return json.replace("#numplayers", Bukkit.getOnlinePlayers().size() + "")

@@ -10,15 +10,12 @@ public class ResourcesHandler {
 
 	private static final Logger LOGGER = Logger.getLogger(ResourcesHandler.class.getName());
 	private HeroPanel panel;
-	private static final OperatingSystemMXBean OperatingSystem = ManagementFactory
-			.getPlatformMXBean(OperatingSystemMXBean.class);
 
 	public ResourcesHandler(HeroPanel panel) {
 		this.panel = panel;
 	}
 
 	public void setup() {
-		// I'm sure this will be used for something...
 	}
 
 	class CPUUsageResult {
@@ -40,10 +37,12 @@ public class ResourcesHandler {
 	}
 
 	public CPUUsageResult getCPUUsageMethod() {
-		if (OperatingSystem.getProcessCpuLoad() > 0) {
-			return new CPUUsageResult(OperatingSystem.getProcessCpuLoad(), "CPU-Usage-Server");
-		} else if (OperatingSystem.getSystemCpuLoad() > 0) {
-			return new CPUUsageResult(OperatingSystem.getSystemCpuLoad(), "CPU-Usage-System");
+		OperatingSystemMXBean operatingSystemObject = ManagementFactory.getPlatformMXBean(OperatingSystemMXBean.class);
+		if (operatingSystemObject.getProcessCpuLoad() > 0) {
+			System.out.println((double) operatingSystemObject.getProcessCpuLoad() + "  " + operatingSystemObject.getName());
+			return new CPUUsageResult((double) operatingSystemObject.getProcessCpuLoad(), "CPU-Usage-Server");
+		} else if (operatingSystemObject.getSystemCpuLoad() > 0) {
+			return new CPUUsageResult(operatingSystemObject.getSystemCpuLoad(), "CPU-Usage-System");
 		}
 		return new CPUUsageResult(-1, "cpuLoad");
 	}
@@ -69,23 +68,26 @@ public class ResourcesHandler {
 	}
 
 	public String getArch() {
-		return OperatingSystem.getArch();
+		OperatingSystemMXBean operatingSystemObject = ManagementFactory.getPlatformMXBean(OperatingSystemMXBean.class);
+		return operatingSystemObject.getArch();
 	}
 
 	public String getName() {
-		return OperatingSystem.getName();
+		OperatingSystemMXBean operatingSystemObject = ManagementFactory.getPlatformMXBean(OperatingSystemMXBean.class);
+		return operatingSystemObject.getName();
 	}
 
 	public String getVersion() {
-		return OperatingSystem.getVersion();
+		OperatingSystemMXBean operatingSystemObject = ManagementFactory.getPlatformMXBean(OperatingSystemMXBean.class);
+		return operatingSystemObject.getVersion();
 	}
-	
+
 	private static final File rootDirectory = new File("./");
-	
+
 	public long getFreeDiskSpace() {
 		return rootDirectory.getFreeSpace();
 	}
-	
+
 	public long getTotalDiskSpace() {
 		return rootDirectory.getTotalSpace();
 	}
@@ -95,7 +97,8 @@ public class ResourcesHandler {
 	}
 
 	public long getSwapSpaceSize() {
-		return OperatingSystem.getTotalSwapSpaceSize();
+		OperatingSystemMXBean operatingSystemObject = ManagementFactory.getPlatformMXBean(OperatingSystemMXBean.class);
+		return operatingSystemObject.getTotalSwapSpaceSize();
 	}
 
 }
