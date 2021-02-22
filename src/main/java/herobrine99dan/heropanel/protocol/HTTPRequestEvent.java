@@ -31,15 +31,17 @@ public class HTTPRequestEvent extends Event {
 	public byte[] byteArr;
 
 	public HTTPRequestEvent(HTTPConnection request, ChannelHandlerContext ctx) {
+		super(true);
 		this.connection = request;
 		this.httpcode = HTTPResponseCode.Code200;
-		if(!(ctx.channel().remoteAddress() instanceof InetSocketAddress)) {
+		if (!(ctx.channel().remoteAddress() instanceof InetSocketAddress)) {
 			throw new RuntimeException("remoteAddress() didn't give a 'InetSocketAddress' object");
 		}
 		this.ipCTXAddress = (InetSocketAddress) ctx.channel().remoteAddress();
 	}
-	
+
 	public HTTPRequestEvent(HTTPConnection request, Socket socket) {
+		super(true);
 		this.connection = request;
 		this.httpcode = HTTPResponseCode.Code200;
 		this.ipSocketAddress = socket.getInetAddress();
@@ -63,7 +65,7 @@ public class HTTPRequestEvent extends Event {
 	}
 
 	public String getAddress() {
-		if(!isUsingDefaultJavaSockets) {
+		if (!isUsingDefaultJavaSockets) {
 			return ipCTXAddress.getAddress().getHostAddress();
 		}
 		return this.ipSocketAddress.getHostAddress();
@@ -84,15 +86,15 @@ public class HTTPRequestEvent extends Event {
 	public HTTPConnection getConnection() {
 		return this.connection;
 	}
-	
+
 	public String getHost() {
 		return this.getConnection().host;
 	}
-	
+
 	public String getMethod() {
 		return this.getConnection().method;
 	}
-	
+
 	public String getNgrokIp() {
 		return this.getConnection().ngrokIp;
 	}

@@ -36,7 +36,7 @@ public class Utility {
 		con.setRequestProperty("Accept", "application/json");
 		con.setDoOutput(true);
 		String jsonInputString = "{\n" + " \"addr\": \"superPort\",\n" + " \"proto\": \"protocolNgrok\",\n"
-				+ " \"name\": \"heropanelip\"\n" + "}".replaceFirst("superPort", Integer.toString(portNgrok))
+				+ " \"name\": \"serverip\"\n" + "}".replaceFirst("superPort", Integer.toString(portNgrok))
 						.replaceFirst("protocolNgrok", protocolNgrok);
 		try (OutputStream os = con.getOutputStream()) {
 			byte[] input = jsonInputString.getBytes("utf-8");

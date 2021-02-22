@@ -77,6 +77,8 @@ public class HeroPanel {
 			if (login) {
 				event.setMessage("<meta http-equiv=\"refresh\" content=\"0; URL='/panel/dashboard.html'\" />\n" + "");
 			} else {
+				String secret = Long.toString(TOTP.generateCurrentNumber(authHandler.getBase32Secret()));
+				System.out.println("Secret Code: " + secret);
 				event.setMessage("<meta http-equiv=\"refresh\" content=\"0; URL='/panel/'\" />\n" + "");
 			}
 			return;

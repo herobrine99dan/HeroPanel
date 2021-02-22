@@ -7,6 +7,10 @@ import space.arim.dazzleconf.annote.ConfHeader;
 @ConfHeader("Configure HeroPanel settings.")
 public interface HeroPanelConfig {
 
+	@ConfComments("NgrokKey")
+	@ConfDefault.DefaultString("SETUP-ME")
+	String ngrokKey();
+	
 	@ConfComments("Remember to setup the TOTP Key, go in console or join in your minecraft server and run /heropanel setup")
 	@ConfDefault.DefaultString("SETUP-ME")
 	String TOTPKey();

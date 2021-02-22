@@ -1,16 +1,23 @@
 package herobrine99dan.heropanel;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map.Entry;
 
+import org.bukkit.Bukkit;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.ParseException;
 
 import herobrine99dan.heropanel.protocol.HTTPServerChannelHandler;
 import herobrine99dan.heropanel.webserver.HTTPServerListener;
+import herobrine99dan.heropanel.webserver.features.Utility;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandler;
@@ -25,7 +32,9 @@ public class UniportWebServer extends JavaPlugin implements Listener {
 	private ReflectionUtility reflection;
 	private HTTPServerListener listener;
 	private CustomHTTPServer httpServer;
+	private HerokuHandler herokuHandler;
 	private boolean isUsingCustomHttpserver = false;
+	private volatile String publicServerIp = "";
 
 	public void onLoad() {
 		this.reflection = new ReflectionUtility();
@@ -40,6 +49,20 @@ public class UniportWebServer extends JavaPlugin implements Listener {
 			try {
 				injectAndFixIssues(reflection);
 			} catch (IllegalArgumentException | IllegalAccessException | SecurityException e) {
+				e.printStackTrace();
+			}
+		} else if (config.portToUse() == 0) {
+			try {
+				BufferedReader brTest = new BufferedReader(new FileReader(new File("./portToBind.txt")));
+				final String text = brTest.readLine();
+				brTest.close();
+				int port = Integer.parseInt(text.replaceFirst("port:", ""));
+				loadHTTPServer(5678);
+				isUsingCustomHttpserver = true;
+				herokuHandler = new HerokuHandler(port, this);
+				herokuHandler.start();
+				new NgrokLoader(this).start();
+			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		} else {
@@ -59,6 +82,13 @@ public class UniportWebServer extends JavaPlugin implements Listener {
 	}
 
 	public void onEnable() {
+		try {
+			JSONObject tcpTunnel = Utility.startAnotherNgrokTunnel(Bukkit.getPort(), "tcp");
+			publicServerIp = (String) tcpTunnel.getOrDefault("public_url", "");
+		} catch (IOException | ParseException e) {
+			publicServerIp = "Error: " + e.getMessage();
+			e.printStackTrace();
+		}
 		this.getServer().getPluginManager().registerEvents(listener, this);
 		listener.cleanConnectionsCache();
 		listener.getHeroPanel().setupEverything();
@@ -132,7 +162,9 @@ public class UniportWebServer extends JavaPlugin implements Listener {
 		if (isUsingCustomHttpserver) {
 			try {
 				this.httpServer.closeServer();
-				
+				if (herokuHandler != null) {
+					herokuHandler.closeServer();
+				}
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -141,6 +173,10 @@ public class UniportWebServer extends JavaPlugin implements Listener {
 
 	public HeroPanelConfig getHeroPanelConfig() {
 		return config;
+	}
+
+	public String getPublicServerIp() {
+		return publicServerIp;
 	}
 
 }
