@@ -82,13 +82,13 @@ public class UniportWebServer extends JavaPlugin implements Listener {
 	}
 
 	public void onEnable() {
-		try {
+		/*try {
 			JSONObject tcpTunnel = Utility.startAnotherNgrokTunnel(Bukkit.getPort(), "tcp");
 			publicServerIp = (String) tcpTunnel.getOrDefault("public_url", "");
 		} catch (IOException | ParseException e) {
 			publicServerIp = "Error: " + e.getMessage();
 			e.printStackTrace();
-		}
+		}*/
 		this.getServer().getPluginManager().registerEvents(listener, this);
 		listener.cleanConnectionsCache();
 		listener.getHeroPanel().setupEverything();
