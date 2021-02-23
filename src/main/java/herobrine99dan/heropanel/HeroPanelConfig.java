@@ -6,18 +6,13 @@ import space.arim.dazzleconf.annote.ConfHeader;
 
 @ConfHeader("Configure HeroPanel settings.")
 public interface HeroPanelConfig {
-
-	@ConfComments("timeZone")
-	@ConfDefault.DefaultInteger(0)
-	int timeZone();
-	
 	@ConfComments("ngrokKey")
 	@ConfDefault.DefaultString("SETUP-ME")
 	String ngrokKey();
 	
-	@ConfComments("Remember to setup the TOTP Key, go in console or join in your minecraft server and run /heropanel setup")
-	@ConfDefault.DefaultString("SETUP-ME")
-	String TOTPKey();
+	@ConfComments("account")
+	@ConfDefault.DefaultString("")
+	String account();
 
 	@ConfComments("Should HeroPanel enable color code support in console? (WARNING: this feauture isn't implemented, if you enable this you will get messages with § character)")
 	@ConfDefault.DefaultBoolean(false)

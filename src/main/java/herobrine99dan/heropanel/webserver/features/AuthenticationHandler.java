@@ -6,13 +6,10 @@ import java.util.concurrent.atomic.AtomicReference;
 public class AuthenticationHandler {
 		
 	private AtomicReference<String> authenticated = new AtomicReference<String>("");
-	private final String base32Secret;
-	private AtomicReference<String> lastCodeUsed = new AtomicReference<String>("");
-	private final int timeZone;
+	private final String realAccount;
 	
-	public AuthenticationHandler(String totpKey, int timeZone) {
-		this.base32Secret = totpKey;
-		this.timeZone = timeZone;
+	public AuthenticationHandler(String realAccount) {
+		this.realAccount = realAccount;
 	}
 	
 	public boolean isAuthenticated(String ip) {
@@ -34,27 +31,22 @@ public class AuthenticationHandler {
 		if(!authenticated.get().isEmpty()) {
 			return false;
 		}
-		if(!code.matches("[0-9]+")) {
-			return false;
-		}
 		return isCodeCorrect(code, ip);
 	}
 	
-	private boolean isCodeCorrect(String code, String ip) throws GeneralSecurityException {
-		if(code.isEmpty()) {
+	private boolean isCodeCorrect(String account, String ip) throws GeneralSecurityException {
+		if(account.isEmpty()) {
 			return false;
 		}
-		String secret = Long.toString(TOTP.generateCurrentNumber(base32Secret, timeZone));
-		if(secret.equals(code) && !lastCodeUsed.get().equals(secret)) {
+		if(realAccount.equals(account)) {
 			authenticated.set(ip);
-			lastCodeUsed.set(secret);
 			return true;
 		}
 		return false;
 	}
 
-	public String getBase32Secret() {
-		return base32Secret;
+	public String getRealAccount() {
+		return realAccount;
 	}
 
 }
