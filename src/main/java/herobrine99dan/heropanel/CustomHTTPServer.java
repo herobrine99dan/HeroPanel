@@ -33,9 +33,7 @@ public class CustomHTTPServer extends Thread {
 	}
 
 	/**
-	 * Close the server safely This method is thread safe: the close action is
-	 * executed in the same thread of the CustomHTTPServer before the server handle
-	 * any connection
+	 * Close the server safely.
 	 * @throws IOException 
 	 */
 	public void closeServer() throws IOException {

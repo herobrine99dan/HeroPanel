@@ -9,12 +9,12 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map.Entry;
 
-import org.bukkit.Bukkit;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 
+import herobrine99dan.heropanel.heroku.HerokuHandler;
+import herobrine99dan.heropanel.heroku.NgrokLoader;
 import herobrine99dan.heropanel.protocol.HTTPServerChannelHandler;
 import herobrine99dan.heropanel.webserver.HTTPServerListener;
 import herobrine99dan.heropanel.webserver.features.Utility;
@@ -35,6 +35,7 @@ public class UniportWebServer extends JavaPlugin implements Listener {
 	private HerokuHandler herokuHandler;
 	private boolean isUsingCustomHttpserver = false;
 	private volatile String publicServerIp = "";
+	private volatile String publicHeroPanelIp = "";
 
 	public void onLoad() {
 		this.reflection = new ReflectionUtility();
@@ -82,6 +83,12 @@ public class UniportWebServer extends JavaPlugin implements Listener {
 	}
 
 	public void onEnable() {
+		try {
+			publicServerIp = Utility.getPublicIp("serverIp");
+			publicHeroPanelIp = Utility.getPublicIp("heropanelhttp");
+		} catch (IOException | ParseException e) {
+			e.printStackTrace();
+		}
 		/*try {
 			JSONObject tcpTunnel = Utility.startAnotherNgrokTunnel(Bukkit.getPort(), "tcp");
 			publicServerIp = (String) tcpTunnel.getOrDefault("public_url", "");
@@ -177,6 +184,10 @@ public class UniportWebServer extends JavaPlugin implements Listener {
 
 	public String getPublicServerIp() {
 		return publicServerIp;
+	}
+
+	public String getPublicHeroPanelIp() {
+		return publicHeroPanelIp;
 	}
 
 }

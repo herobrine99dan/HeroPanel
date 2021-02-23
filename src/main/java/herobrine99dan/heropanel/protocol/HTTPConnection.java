@@ -13,6 +13,15 @@ public class HTTPConnection {
 	public String ngrokIp = "";
 
 	public byte[] postData;
+	private boolean shouldPost;
+	
+	public HTTPConnection(boolean post) {
+		this.shouldPost = post;
+	}
+	
+	public HTTPConnection() {
+		
+	}
 
 	public void parse(InputStream stream, BufferedReader buffer) throws IOException {
 		String line;
@@ -33,7 +42,7 @@ public class HTTPConnection {
 				ngrokIp = line.replace("X-Forwarded-For: ", "");
 			}
 		}
-		if (method.equalsIgnoreCase("POST")) {
+		if (method.equalsIgnoreCase("POST") && shouldPost) {
 			if (postDataI > 0) {
 				byte[] byteArray = new byte[postDataI];
 				stream.read(byteArray, 0, postDataI);

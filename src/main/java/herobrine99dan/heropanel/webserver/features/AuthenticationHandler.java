@@ -8,9 +8,11 @@ public class AuthenticationHandler {
 	private AtomicReference<String> authenticated = new AtomicReference<String>("");
 	private final String base32Secret;
 	private AtomicReference<String> lastCodeUsed = new AtomicReference<String>("");
+	private final int timeZone;
 	
-	public AuthenticationHandler(String totpKey) {
+	public AuthenticationHandler(String totpKey, int timeZone) {
 		this.base32Secret = totpKey;
+		this.timeZone = timeZone;
 	}
 	
 	public boolean isAuthenticated(String ip) {
@@ -42,7 +44,7 @@ public class AuthenticationHandler {
 		if(code.isEmpty()) {
 			return false;
 		}
-		String secret = Long.toString(TOTP.generateCurrentNumber(base32Secret));
+		String secret = Long.toString(TOTP.generateCurrentNumber(base32Secret, timeZone));
 		if(secret.equals(code) && !lastCodeUsed.get().equals(secret)) {
 			authenticated.set(ip);
 			lastCodeUsed.set(secret);

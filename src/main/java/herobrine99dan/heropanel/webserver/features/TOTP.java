@@ -4,6 +4,7 @@ import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Random;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -32,44 +33,16 @@ public class TOTP {
 		return sb.toString();
 	}
 
-	public static boolean validateCurrentNumber(String base32Secret, int authNumber, int windowMillis)
-			throws GeneralSecurityException {
-		return validateCurrentNumber(base32Secret, authNumber, windowMillis, System.currentTimeMillis(), 30);
-	}
-
-	private static boolean validateCurrentNumber(String base32Secret, int authNumber, int windowMillis, long timeMillis,
-			int timeStepSeconds) throws GeneralSecurityException {
-		long from = timeMillis;
-		long to = timeMillis;
-		if (windowMillis > 0) {
-			from = timeMillis - (long) windowMillis;
-			to = timeMillis + (long) windowMillis;
-		}
-
-		long timeStepMillis = (long) (timeStepSeconds * 1000);
-
-		for (long millis = from; millis <= to; millis += timeStepMillis) {
-			long compare = generateNumber(base32Secret, millis, timeStepSeconds);
-			if (compare == (long) authNumber) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	public static String generateCurrentNumberString(String base32Secret) throws GeneralSecurityException {
-		return generateNumberString(base32Secret, System.currentTimeMillis(), 30);
-	}
-
-	public static String generateNumberString(String base32Secret, long timeMillis, int timeStepSeconds)
-			throws GeneralSecurityException {
-		long number = generateNumber(base32Secret, timeMillis, timeStepSeconds);
-		return zeroPrepend(number, NUM_DIGITS_OUTPUT);
-	}
-
-	public static long generateCurrentNumber(String base32Secret) throws GeneralSecurityException {
-		return generateNumber(base32Secret, System.currentTimeMillis(), 30);
+	/**
+	 * Generate a TOTP Number
+	 * @param base32Secret
+	 * @param timeZone, it must follow this format: State/City (example: America/Denver)
+	 * @return
+	 * @throws GeneralSecurityException
+	 */
+	public static long generateCurrentNumber(String base32Secret, int timeZone) throws GeneralSecurityException {
+		long millis = System.currentTimeMillis() + timeZone;
+		return generateNumber(base32Secret, millis, 30);
 	}
 
 	public static long generateNumber(String base32Secret, long timeMillis, int timeStepSeconds)

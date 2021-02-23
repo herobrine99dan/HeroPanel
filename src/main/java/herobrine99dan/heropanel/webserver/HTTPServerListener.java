@@ -14,7 +14,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import herobrine99dan.heropanel.ReflectionUtility;
 import herobrine99dan.heropanel.UniportWebServer;
 import herobrine99dan.heropanel.protocol.HTTPRequestEvent;
 import herobrine99dan.heropanel.protocol.HTTPResponseCode;
@@ -25,16 +24,15 @@ public class HTTPServerListener implements Listener {
 
 	private ConcurrentHashMap<String, Integer> connections = new ConcurrentHashMap<String, Integer>();
 	private final HeroPanel panel;
-	private final boolean ngrokCompatibility; // TODO Use ngrokCompatibility and lunch a tunnel with ngrok that
-	private final String httpTunnel = "";
 	private final long maxRequestsPerSecondByIP;
+	private boolean ngrokCompatibility;
 	private final UniportWebServer main;
 
 	public HTTPServerListener(UniportWebServer main) {
 		this.main = main;
 		this.panel = new HeroPanel(main);
-		ngrokCompatibility = main.getHeroPanelConfig().ngrokCompatibility();
 		maxRequestsPerSecondByIP = main.getHeroPanelConfig().maxRequestsPerSecondByIP();
+		ngrokCompatibility = main.getHeroPanelConfig().portToUse() == 0;
 		((Logger) LogManager.getRootLogger()).addFilter(new LogFilter(panel));
 	}
 
@@ -60,7 +58,9 @@ public class HTTPServerListener implements Listener {
 			// generated
 			// every time you restart the server, if you don't give the url no one will be
 			// able to exploit this because they don't know what url to connect to.
-			return !event.getNgrokIp().isEmpty() && event.getHost().equals(httpTunnel);
+			final String normalURL = this.main.getPublicHeroPanelIp().replaceFirst("https://", "").replaceFirst("http://", "")
+					.replaceFirst("/", "");
+			return !event.getNgrokIp().isEmpty() && event.getHost().contains(normalURL);
 		}
 		// If the server doesn't use Ngrok Tunnels, then it will use the router's
 		// connection.
